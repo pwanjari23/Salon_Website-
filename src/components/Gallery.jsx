@@ -1,16 +1,51 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Camera, Eye, X, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { salonData } from '../data/salonData';
 
 export default function Gallery() {
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [activeImageIndex, setActiveImageIndex] = useState(null);
+  const [mobileSlideIndex, setMobileSlideIndex] = useState(0);
+
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
 
   const categories = ['All', 'Interiors', 'Hair Styling', 'Hair Colour', "Men's Grooming", 'Hair Treatments', 'Skincare'];
 
   const filteredGallery = selectedFilter === 'All'
     ? salonData.gallery
     : salonData.gallery.filter(item => item.category.toLowerCase() === selectedFilter.toLowerCase());
+
+  // Group images into sets of 4 for mobile carousel (2 on line 1, 2 on line 2)
+  const mobileSlides = [];
+  const chunkSize = 4;
+  for (let i = 0; i < filteredGallery.length; i += chunkSize) {
+    mobileSlides.push(filteredGallery.slice(i, i + chunkSize));
+  }
+
+  // Reset mobile slide index if filter changes
+  useEffect(() => {
+    setMobileSlideIndex(0);
+  }, [selectedFilter]);
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchMove = (e) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    const diff = touchStartX.current - touchEndX.current;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0 && mobileSlideIndex < mobileSlides.length - 1) {
+        setMobileSlideIndex(prev => prev + 1);
+      } else if (diff < 0 && mobileSlideIndex > 0) {
+        setMobileSlideIndex(prev => prev - 1);
+      }
+    }
+  };
 
   // Lightbox navigation
   const openLightbox = (index) => {
@@ -51,7 +86,7 @@ export default function Gallery() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 md:mb-12 gap-6">
           <div>
             <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[#B99A66] mb-3">
               <Camera className="w-3.5 h-3.5" />
@@ -84,8 +119,116 @@ export default function Gallery() {
           </div>
         </div>
 
-        {/* Gallery Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* ======================================================== */}
+        {/* MOBILE CAROUSEL: 2 images in one line, 2 in next line */}
+        {/* ======================================================== */}
+        <div className="block md:hidden">
+          {/* Carousel Slide Container */}
+          <div
+            className="relative overflow-hidden rounded-2xl bg-[#F8F5F0] p-3 border border-[#B9AA99]/20 shadow-sm touch-pan-y"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            {mobileSlides.length > 0 ? (
+              <div className="relative">
+                {/* 2x2 Image Grid for Current Slide */}
+                <div className="grid grid-cols-2 gap-2.5">
+                  {mobileSlides[mobileSlideIndex]?.map((item, idxInSlide) => {
+                    const globalIdx = mobileSlideIndex * chunkSize + idxInSlide;
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => openLightbox(globalIdx)}
+                        className="group relative rounded-xl overflow-hidden cursor-pointer bg-[#E9E0D5] aspect-square border border-[#B9AA99]/20 shadow-sm active:scale-95 transition-transform"
+                      >
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="w-full h-full object-cover object-center"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#1E1D1B]/85 via-transparent to-transparent flex flex-col justify-end p-2.5 text-white">
+                          <span className="text-[9px] uppercase font-bold text-[#B99A66] tracking-wider leading-none">
+                            {item.category}
+                          </span>
+                          <h4 className="text-xs font-medium text-white truncate mt-1">
+                            {item.title}
+                          </h4>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="py-12 text-center text-sm text-[#1E1D1B]/60">
+                No images found in this category.
+              </div>
+            )}
+
+            {/* Mobile Carousel Controls & Indicators */}
+            {mobileSlides.length > 1 && (
+              <div className="mt-4 pt-3 border-t border-[#B9AA99]/20 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setMobileSlideIndex(prev => Math.max(0, prev - 1))}
+                  disabled={mobileSlideIndex === 0}
+                  className={`p-2 rounded-full border text-xs flex items-center justify-center transition-colors ${
+                    mobileSlideIndex === 0
+                      ? 'border-[#B9AA99]/20 text-[#B9AA99]/40 cursor-not-allowed'
+                      : 'border-[#1E1D1B]/30 bg-white text-[#1E1D1B] active:bg-[#B99A66] active:text-white'
+                  }`}
+                  aria-label="Previous gallery slide"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                {/* Dots indicator */}
+                <div className="flex items-center gap-1.5">
+                  {mobileSlides.map((_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setMobileSlideIndex(i)}
+                      className={`h-2 rounded-full transition-all ${
+                        mobileSlideIndex === i
+                          ? 'w-6 bg-[#B99A66]'
+                          : 'w-2 bg-[#B9AA99]/40'
+                      }`}
+                      aria-label={`Go to slide ${i + 1}`}
+                    />
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setMobileSlideIndex(prev => Math.min(mobileSlides.length - 1, prev + 1))}
+                  disabled={mobileSlideIndex === mobileSlides.length - 1}
+                  className={`p-2 rounded-full border text-xs flex items-center justify-center transition-colors ${
+                    mobileSlideIndex === mobileSlides.length - 1
+                      ? 'border-[#B9AA99]/20 text-[#B9AA99]/40 cursor-not-allowed'
+                      : 'border-[#1E1D1B]/30 bg-white text-[#1E1D1B] active:bg-[#B99A66] active:text-white'
+                  }`}
+                  aria-label="Next gallery slide"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-2 text-center">
+            <span className="text-[11px] text-[#B9AA99] italic">
+              Swipe or tap arrows to view more • Tap image to expand
+            </span>
+          </div>
+        </div>
+
+        {/* ======================================================== */}
+        {/* DESKTOP / TABLET GRID (md and above) */}
+        {/* ======================================================== */}
+        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredGallery.map((item, index) => (
             <div
               key={item.id}

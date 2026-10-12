@@ -1,14 +1,39 @@
-import React from 'react';
-import { Star, ExternalLink, Quote, ThumbsUp } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Star, ExternalLink, Quote, ThumbsUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { salonData } from '../data/salonData';
 
 export default function Reviews() {
+  const [mobileReviewIndex, setMobileReviewIndex] = useState(0);
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+
+  const totalReviews = salonData.reviews.length;
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchMove = (e) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    const diff = touchStartX.current - touchEndX.current;
+    if (Math.abs(diff) > 45) {
+      if (diff > 0 && mobileReviewIndex < totalReviews - 1) {
+        setMobileReviewIndex(prev => prev + 1);
+      } else if (diff < 0 && mobileReviewIndex > 0) {
+        setMobileReviewIndex(prev => prev - 1);
+      }
+    }
+  };
+
   return (
     <section id="reviews" className="py-20 lg:py-28 bg-[#FFFFFF] border-y border-[#E9E0D5]/70">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Verified Rating Header Banner */}
-        <div className="bg-[#F8F5F0] rounded-2xl p-8 lg:p-10 border border-[#B9AA99]/30 mb-16 shadow-sm">
+        <div className="bg-[#F8F5F0] rounded-2xl p-6 sm:p-8 lg:p-10 border border-[#B9AA99]/30 mb-12 md:mb-16 shadow-sm">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             
             <div className="lg:col-span-8">
@@ -20,7 +45,7 @@ export default function Reviews() {
                 Loved by Our Customers
               </h2>
               <p className="text-sm sm:text-base text-[#1E1D1B]/75 leading-relaxed max-w-2xl">
-                Rated <strong className="text-[#1E1D1B]">4.8 out of 5 stars</strong> across over <strong className="text-[#1E1D1B]">190+ verified local customer reviews</strong> in Pune. Recognized for our clean, hygienic salon atmosphere, attentive consultations, and welcoming hospitality.
+                Rated <strong className="text-[#1E1D1B]">4.8 out of 5 stars</strong> across over <strong className="text-[#1E1D1B]">190+ verified local customer reviews</strong> in Pune. Recognized for our clean, hygienic parlour atmosphere, attentive consultations, and welcoming hospitality.
               </p>
             </div>
 
@@ -43,7 +68,7 @@ export default function Reviews() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-xs font-semibold text-[#1E1D1B] hover:text-[#B99A66] transition-colors underline underline-offset-4"
               >
-                <span>Read Customer Reviews on Justdial</span>
+                <span>Read Customer Reviews on Google Maps</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
             </div>
@@ -51,8 +76,99 @@ export default function Reviews() {
           </div>
         </div>
 
-        {/* 3 Authentic Customer Feedback Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* ======================================================== */}
+        {/* MOBILE REVIEWS CAROUSEL (<md screens) */}
+        {/* ======================================================== */}
+        <div className="block md:hidden">
+          <div
+            className="p-6 rounded-2xl bg-[#F8F5F0] border border-[#B9AA99]/25 shadow-sm touch-pan-y"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            {(() => {
+              const currentRev = salonData.reviews[mobileReviewIndex];
+              return (
+                <div>
+                  <Quote className="w-8 h-8 text-[#B99A66]/50 mb-3" />
+                  <div className="flex text-[#B99A66] mb-3">
+                    {[...Array(currentRev.rating)].map((_, i) => (
+                      <Star key={i} className="w-3.5 h-3.5 fill-[#B99A66] text-[#B99A66]" />
+                    ))}
+                  </div>
+                  <h3 className="font-editorial text-xl font-medium text-[#1E1D1B] mb-2 leading-snug">
+                    "{currentRev.highlight}"
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#1E1D1B]/75 leading-relaxed mb-5 italic">
+                    "{currentRev.text}"
+                  </p>
+                  <div className="pt-3 border-t border-[#B9AA99]/20 flex justify-between items-center text-xs">
+                    <span className="font-semibold text-[#1E1D1B]">{currentRev.author}</span>
+                    <span className="text-[#B9AA99]">{currentRev.source}</span>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Mobile Controls */}
+            <div className="mt-5 pt-3 border-t border-[#B9AA99]/20 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setMobileReviewIndex(prev => Math.max(0, prev - 1))}
+                disabled={mobileReviewIndex === 0}
+                className={`p-2 rounded-full border text-xs flex items-center justify-center transition-colors ${
+                  mobileReviewIndex === 0
+                    ? 'border-[#B9AA99]/20 text-[#B9AA99]/40 cursor-not-allowed'
+                    : 'border-[#1E1D1B]/30 bg-white text-[#1E1D1B] active:bg-[#B99A66] active:text-white'
+                }`}
+                aria-label="Previous review"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              <div className="flex items-center gap-1.5">
+                {salonData.reviews.map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setMobileReviewIndex(i)}
+                    className={`h-2 rounded-full transition-all ${
+                      mobileReviewIndex === i
+                        ? 'w-6 bg-[#B99A66]'
+                        : 'w-2 bg-[#B9AA99]/40'
+                    }`}
+                    aria-label={`Go to review ${i + 1}`}
+                  />
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setMobileReviewIndex(prev => Math.min(totalReviews - 1, prev + 1))}
+                disabled={mobileReviewIndex === totalReviews - 1}
+                className={`p-2 rounded-full border text-xs flex items-center justify-center transition-colors ${
+                  mobileReviewIndex === totalReviews - 1
+                    ? 'border-[#B9AA99]/20 text-[#B9AA99]/40 cursor-not-allowed'
+                    : 'border-[#1E1D1B]/30 bg-white text-[#1E1D1B] active:bg-[#B99A66] active:text-white'
+                }`}
+                aria-label="Next review"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-2 text-center">
+            <span className="text-[11px] text-[#B9AA99] italic">
+              Swipe left or right to read more verified feedback
+            </span>
+          </div>
+        </div>
+
+        {/* ======================================================== */}
+        {/* DESKTOP 3-REVIEW GRID (md and above) */}
+        {/* ======================================================== */}
+        <div className="hidden md:grid md:grid-cols-3 gap-8">
           {salonData.reviews.map((rev) => (
             <div
               key={rev.id}
