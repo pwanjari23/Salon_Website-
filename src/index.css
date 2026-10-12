@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Cormorant Garamond", Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  
+  --color-ivory: #F8F5F0;
+  --color-white: #FFFFFF;
+  --color-charcoal: #1E1D1B;
+  --color-charcoal-muted: #4A4844;
+  --color-gold: #B99A66;
+  --color-gold-dark: #9E8150;
+  --color-gold-light: #F4EFE6;
+  --color-taupe: #B9AA99;
+  --color-beige: #E9E0D5;
+  --color-beige-subtle: #F3ECE2;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    font-family: "Plus Jakarta Sans", sans-serif;
+    background-color: #F8F5F0;
+    color: #1E1D1B;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, .font-serif-heading {
+    font-family: "Cormorant Garamond", serif;
+  }
+}
+
+/* Custom editorial styles & utilities */
+.font-editorial {
+  font-family: "Cormorant Garamond", Georgia, serif;
+}
+
+.text-gold {
+  color: #B99A66;
+}
+
+.bg-gold {
+  background-color: #B99A66;
+}
+
+.border-gold {
+  border-color: #B99A66;
+}
+
+/* Glass & subtle luxury finishes */
+.luxury-glass {
+  background: rgba(248, 245, 240, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.luxury-border {
+  border-color: rgba(185, 154, 102, 0.22);
+}
+
+.gold-glow:hover {
+  box-shadow: 0 10px 25px -5px rgba(185, 154, 102, 0.2);
+}
+
+/* Hide scrollbars for clean galleries if needed */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
